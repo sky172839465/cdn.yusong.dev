@@ -25,7 +25,7 @@ jobs:
       - name: Remove all non-image files under src
         run: |
           find main -type f ! \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.bmp" -o -name "*.svg" -o -name "*.webp" \) -delete
-          find main/src/pages f -name "*.png" -delete
+          find main/src/pages -type f -name "*.png" -delete || echo "No PNG files found"
 
       - name: Remove empty folders under src
         run: |
