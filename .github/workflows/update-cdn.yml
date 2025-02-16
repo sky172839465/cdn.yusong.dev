@@ -10,30 +10,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+        with:
+          path: cdn
+
       - name: Checkout main source
         uses: actions/checkout@v4
         with:
           repository: sky172839465/yusong.tw
           sparse-checkout: src
+          path: main
 
       - name: Remove all non-image files under src
         run: |
-          find . -type f ! \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.bmp" -o -name "*.svg" -o -name "*.webp" \) -delete
+          find main -type f ! \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.bmp" -o -name "*.svg" -o -name "*.webp" \) -delete
 
       - name: Remove empty folders under src
         run: |
-          find . -type d -empty -delete
+          find main -type d -empty -delete
 
-      - name: Checkout current repo
-        uses: actions/checkout@v4
+      - name: Copy all files from __static__
+        run: |
+          mkdir -p main/static
+          cp -r cdn/__static__/* main/static/
 
-      - name: Check status
+      - name: Check files
         run: ls -l
 
       - name: Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ./main
 
   deploy:
     needs: clean-source
