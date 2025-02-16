@@ -20,6 +20,15 @@ jobs:
         run: |
           find src -type f ! \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.bmp" -o -name "*.svg" -o -name "*.webp" \) -delete
 
+      - name: Remove empty folders under src
+        run: |
+          find src -type d -empty -delete
+
+      - name: Copy static folder
+        run: |
+          mkdir -p src/static
+          cp __static__/**/* src/static
+
       - name: Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
