@@ -10,20 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout main source
         uses: actions/checkout@v4
         with:
           repository: sky172839465/yusong.tw
-          token: ${{ secrets.CROSS_REPO_WORKFLOW }}
           sparse-checkout: src
 
       - name: Remove all non-image files under src
         run: |
-          find src -type f ! \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.bmp" -o -name "*.svg" -o -name "*.webp" \) -delete
+          find . -type f ! \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.bmp" -o -name "*.svg" -o -name "*.webp" \) -delete
 
       - name: Remove empty folders under src
         run: |
-          find src -type d -empty -delete
+          find . -type d -empty -delete
+
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+
+      - name: Check status
+        run: ls -l
 
       - name: Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v3
