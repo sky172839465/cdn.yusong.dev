@@ -35,6 +35,7 @@ jobs:
         run: |
           mkdir -p main/static
           cp -r cdn/__static__/* main/static/
+          cp -r cdn/404.html main/
 
       - name: Check files
         run: ls -l
