@@ -1,0 +1,36 @@
+name: update-cdn
+
+on:
+  repository_dispatch:
+    types: [trigger-build]
+
+jobs:
+  clean-source:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          repository: sky172839465/yusong.tw
+          token: ${{ secrets.CROSS_REPO_WORKFLOW }}
+
+      - name: Remove all non-image files under src
+        run: |
+          find src -type f ! \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.bmp" -o -name "*.svg" -o -name "*.webp" \) -delete
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./src
+
+  deploy:
+    needs: clean-source
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
