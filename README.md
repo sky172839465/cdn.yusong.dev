@@ -1,2 +1,2 @@
-# cdn.yusong.tw
-YUSONG.TW CDN
+# cdn.yusong.dev
+YUSONG.DEV CDN
