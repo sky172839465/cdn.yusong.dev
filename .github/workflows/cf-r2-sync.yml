@@ -22,6 +22,11 @@ jobs:
         with:
           fetch-depth: 0  # needed for diff detection
 
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
       # - name: Set up AWS CLI for R2
       #   uses: aws-actions/configure-aws-credentials@v5.1.0
       #   with:
@@ -89,16 +94,7 @@ jobs:
             exit 0
           fi
 
-          # function to get image dimensions
-          get_image_info() {
-            local file="$1"
-            if identify "$file" &>/dev/null; then
-              read width height <<< $(identify -format "%w %h" "$file")
-              echo "{\"name\":\"$(basename "$file")\",\"width\":$width,\"height\":$height}"
-            else
-              echo "{\"name\":\"$(basename "$file")\"}"
-            fi
-          }
+          npm install image-size
 
           # Collect unique directories from changed files
           dirs=$(awk '{print $2}' changes.txt | while read file; do
@@ -117,7 +113,7 @@ jobs:
             for file in "$dir"/*; do
               [ ! -f "$file" ] && continue
               # only process if regular file
-              files_json+=$(get_image_info "$file")
+              files_json+=$(node scripts/getImageSize.js "$file")
               files_json+=", "
             done
           
