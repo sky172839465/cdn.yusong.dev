@@ -18,12 +18,28 @@ jobs:
         with:
           fetch-depth: 0  # needed for diff detection
 
-      - name: Set up AWS CLI for R2
-        uses: aws-actions/configure-aws-credentials@v5.1.0
-        with:
-          aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+      # - name: Set up AWS CLI for R2
+      #   uses: aws-actions/configure-aws-credentials@v5.1.0
+      #   with:
+      #     aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-1
+
+      # configure-aws-credentials not support cf keys yet
+      - name: Configure AWS credentials for Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          mkdir -p ~/.aws
+          cat <<EOF > ~/.aws/credentials
+          [default]
+          aws_access_key_id=${AWS_ACCESS_KEY_ID}
+          aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}
+          EOF
+          echo "[default]" > ~/.aws/config
+          echo "region = us-east-1" >> ~/.aws/config
+          echo "Configured AWS credentials for R2"
 
       - name: Generate ls.json for each folder
         run: |
