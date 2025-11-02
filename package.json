@@ -1,0 +1,13 @@
+{
+  "name": "cdn.yusong.dev",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "CDN for yusong.dev",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "image-size": "^2.0.2"
+  },
+  "author": "Yusong Hsu",
+  "license": "MIT"
+}
