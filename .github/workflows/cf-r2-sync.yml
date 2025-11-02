@@ -83,6 +83,12 @@ jobs:
           if [ ! -d "${SYNC_DIR}" ]; then
             exit 0
           fi
+
+          if [ ! -s changes.txt ]; then
+            echo "No changes detected in ${SYNC_DIR}. Exiting."
+            exit 0
+          fi
+
           # generate files
           find "${SYNC_DIR}" -type d | while read dir; do
             files=$(find "$dir" -maxdepth 1 -type f -not -name "ls.json" -printf '"%f", ' | sed 's/, $//')
@@ -91,6 +97,7 @@ jobs:
             echo "$json" | jq . > "$dir/ls.json"
             echo "Generated $dir/ls.json"
           done
+
           # upload files
           find "${SYNC_DIR}" -name "ls.json" -type f | while read file; do
             echo "📂 Uploading $file"
