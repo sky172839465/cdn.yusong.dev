@@ -80,17 +80,13 @@ jobs:
 
       - name: Generate ls.json for each folder in SYNC_DIR & upload to R2
         run: |
-          if [ ! -d "${SYNC_DIR}" ]; then
-            exit 0
-          fi
-
           if [ ! -s changes.txt ]; then
             echo "No changes detected in ${SYNC_DIR}. Exiting."
             exit 0
           fi
 
           # Collect unique directories from changed files
-          dirs=$(awk '{print $2}' "$CHANGES_FILE" | while read file; do
+          dirs=$(awk '{print $2}' changes.txt | while read file; do
             # Get directory of file
             dir="$(dirname "$file")"
             echo "$dir"
