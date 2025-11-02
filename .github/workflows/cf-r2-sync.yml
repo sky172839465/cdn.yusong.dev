@@ -77,6 +77,13 @@ jobs:
                 echo "❌ Removing $file"
                 aws s3 rm "s3://${R2_BUCKET}/${file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT
                 ;;
+              R*)
+                old_file=$(echo "$file" | awk '{print $2}')
+                new_file=$(echo "$file" | awk '{print $3}')
+                echo "🔁 Rename: remove $old_file, add $new_file"
+                aws s3 rm "s3://$R2_BUCKET/${old_file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT
+                aws s3 cp "$new_file" "s3://$R2_BUCKET/${new_file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT --acl public-read
+                ;;
             esac
           done < changes.txt
 
