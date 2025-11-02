@@ -94,17 +94,6 @@ jobs:
             exit 0
           fi
 
-          # function to get image dimensions
-          get_image_info() {
-            local file="$1"
-            if identify "$file" &>/dev/null; then
-              read width height <<< $(identify -format "%w %h" "$file")
-              echo "{\"name\":\"$(basename "$file")\",\"width\":$width,\"height\":$height}"
-            else
-              echo "{\"name\":\"$(basename "$file")\"}"
-            fi
-          }
-
           # Collect unique directories from changed files
           dirs=$(awk '{print $2}' changes.txt | while read file; do
             # Get directory of file
@@ -122,7 +111,7 @@ jobs:
             for file in "$dir"/*; do
               [ ! -f "$file" ] && continue
               # only process if regular file
-              files_json+=$(node getImageSize.js "$file")
+              files_json+=$(node scripts/getImageSize.js "$file")
               files_json+=", "
             done
           
