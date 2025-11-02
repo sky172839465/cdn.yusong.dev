@@ -1,4 +1,4 @@
-name: update-cdn
+name: Sync CDN from yusong.dev
 
 on:
   workflow_dispatch:
@@ -13,12 +13,12 @@ jobs:
       - name: Checkout current repo
         uses: actions/checkout@v4
         with:
-          path: cdn
+          path: current
 
       - name: Checkout main source
         uses: actions/checkout@v4
         with:
-          repository: sky172839465/yusong.tw
+          repository: sky172839465/yusong.dev
           sparse-checkout: src
           path: main
 
@@ -35,8 +35,8 @@ jobs:
       - name: Copy all files from __static__
         run: |
           mkdir -p main/static
-          cp -r cdn/__static__/* main/static/
-          cp -r cdn/404.html main/
+          cp -r current/__static__/* main/static/
+          cp -r current/404.html main/
 
       - name: Check files
         run: ls -l
