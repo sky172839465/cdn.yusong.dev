@@ -10,7 +10,6 @@ env:
   SYNC_DIR: cdn
   AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-  AWS_DEFAULT_REGION: auto
 
 jobs:
   sync:
@@ -23,6 +22,8 @@ jobs:
 
       - name: Set up AWS CLI for R2
         uses: aws-actions/configure-aws-credentials@v5
+        env:
+          aws-region: auto
 
       - name: Generate ls.json for each folder
         run: |
