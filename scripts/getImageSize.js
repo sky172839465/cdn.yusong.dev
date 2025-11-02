@@ -1,15 +1,15 @@
 import fs from 'fs';
-import sizeOf from 'image-size';
+import { imageSizeFromFile } from 'image-size';
 
 const file = process.argv[2];
 
 try {
-  const dimensions = sizeOf(file);
+  const dimensions = await imageSizeFromFile(file);
   console.log(JSON.stringify({ name: file.split('/').pop(), width: dimensions.width, height: dimensions.height }));
 } catch (err) {
   console.log(
     JSON.stringify({
-      name: JSON.stringify(file.split('/').pop())
+      name: file.split('/').pop()
     })
   ); // fallback for non-image
 }
