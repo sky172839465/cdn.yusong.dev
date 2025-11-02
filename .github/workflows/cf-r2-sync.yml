@@ -94,6 +94,8 @@ jobs:
             exit 0
           fi
 
+          npm install image-size
+
           # Collect unique directories from changed files
           dirs=$(awk '{print $2}' changes.txt | while read file; do
             # Get directory of file
