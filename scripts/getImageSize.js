@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { imageSizeFromFile } from 'image-size';
+import { imageSizeFromFile } from 'image-size/fromFile';
 
 const file = process.argv[2];
 
