@@ -22,7 +22,7 @@ jobs:
 
       - name: Set up AWS CLI for R2
         uses: aws-actions/configure-aws-credentials@v5
-        env:
+        with:
           aws-region: auto
 
       - name: Generate ls.json for each folder
