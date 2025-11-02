@@ -80,7 +80,7 @@ jobs:
 
       - name: Generate ls.json for each folder in SYNC_DIR & upload to R2
         run: |
-          if [ -d "${SYNC_DIR}" ]; then
+          if [ ! -d "${SYNC_DIR}" ]; then
             exit 0
           fi
           # generate files
