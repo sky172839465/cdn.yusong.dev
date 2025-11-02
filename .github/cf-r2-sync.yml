@@ -1,0 +1,84 @@
+name: Sync Files to Cloudflare R2
+
+on:
+  push:
+    branches: ["main"]
+
+env:
+  R2_ENDPOINT: https://73f26f76b356e07a46be5fa1485600b7.r2.cloudflarestorage.com
+  R2_BUCKET: cdn
+  SYNC_DIR: cdn
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for diff detection
+
+      - name: Set up AWS CLI for R2
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          aws-region: auto
+          endpoint-url: ${{ env.R2_ENDPOINT }}
+
+      - name: Generate ls.json for each folder
+        run: |
+          root_dir="cdn"
+          find "$root_dir" -type d | while read dir; do
+            files=$(find "$dir" -maxdepth 1 -type f -not -name "ls.json" -printf '"%f", ' | sed 's/, $//')
+            [ -z "$files" ] && continue
+            json="{\"path\": \"${dir#$root_dir/}/\", \"files\": [${files}]}"
+            echo "$json" | jq . > "$dir/ls.json"
+            echo "Generated $dir/ls.json"
+          done
+
+      - name: Detect changes in cdn folder
+        id: diff
+        run: |
+          git fetch origin main
+          git diff --name-status origin/main...HEAD -- "${SYNC_DIR}/" > changes.txt
+          echo "Changed files under ${SYNC_DIR}:"
+          cat changes.txt || true
+
+      - name: Generate ls.json for each folder in cdn/
+        run: |
+          if [ -d "${SYNC_DIR}" ]; then
+            find "${SYNC_DIR}" -type d | while read dir; do
+              files=$(find "$dir" -maxdepth 1 -type f -not -name "ls.json" -printf '"%f", ' | sed 's/, $//')
+              [ -z "$files" ] && continue
+              json="{\"path\": \"${dir#$SYNC_DIR/}/\", \"files\": [${files}]}"
+              echo "$json" | jq . > "$dir/ls.json"
+              echo "Generated $dir/ls.json"
+            done
+          fi
+
+      - name: Process file changes (add/update/delete)
+        run: |
+          while read status file; do
+            case "$status" in
+              A)
+                echo "🆕 Uploading $file"
+                aws s3 cp "$file" "s3://${R2_BUCKET}/${file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT --acl public-read
+                ;;
+              M)
+                echo "♻️ Updating $file"
+                aws s3 cp "$file" "s3://${R2_BUCKET}/${file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT --acl public-read
+                ;;
+              D)
+                echo "❌ Removing $file"
+                aws s3 rm "s3://${R2_BUCKET}/${file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT
+                ;;
+            esac
+          done < changes.txt
+
+      - name: Upload ls.json files
+        run: |
+          find "${SYNC_DIR}" -name "ls.json" -type f | while read file; do
+            echo "📂 Uploading $file"
+            aws s3 cp "$file" "s3://${R2_BUCKET}/${file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT --acl public-read
+          done
