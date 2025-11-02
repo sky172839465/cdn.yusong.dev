@@ -9,6 +9,10 @@ env:
   R2_BUCKET: cdn
   SYNC_DIR: cdn
 
+concurrency:
+  group: "sync-r2"
+  cancel-in-progress: true
+
 jobs:
   sync:
     runs-on: ubuntu-latest
