@@ -49,29 +49,17 @@ jobs:
           echo "Changed files under ${SYNC_DIR}:"
           cat changes.txt || true
 
-      - name: Generate ls.json for each folder in cdn/
-        run: |
-          if [ -d "${SYNC_DIR}" ]; then
-            find "${SYNC_DIR}" -type d | while read dir; do
-              files=$(find "$dir" -maxdepth 1 -type f -not -name "ls.json" -printf '"%f", ' | sed 's/, $//')
-              [ -z "$files" ] && continue
-              json="{\"path\": \"${dir#$SYNC_DIR/}/\", \"files\": [${files}]}"
-              echo "$json" | jq . > "$dir/ls.json"
-              echo "Generated $dir/ls.json"
-            done
-          fi
-
       - name: Process file changes (add/update/delete)
         run: |
           while read status file; do
             case "$status" in
-              A)
-                echo "🆕 Uploading $file"
-                aws s3 cp "$file" "s3://${R2_BUCKET}/${file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT --acl public-read
-                ;;
-              M)
-                echo "♻️ Updating $file"
-                aws s3 cp "$file" "s3://${R2_BUCKET}/${file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT --acl public-read
+              A|M)
+                action="A" && [[ "$status" == "M" ]] && action="♻️"
+                echo "${action} Uploading $file"
+                aws s3 cp "$file" "s3://${R2_BUCKET}/${file#${SYNC_DIR}/}" \
+                  --endpoint-url $R2_ENDPOINT \
+                  --acl public-read \
+                  --cache-control "public, max-age=31536000, immutable"
                 ;;
               D)
                 echo "❌ Removing $file"
@@ -82,14 +70,32 @@ jobs:
                 new_file=$(echo "$file" | awk '{print $3}')
                 echo "🔁 Rename: remove $old_file, add $new_file"
                 aws s3 rm "s3://$R2_BUCKET/${old_file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT
-                aws s3 cp "$new_file" "s3://$R2_BUCKET/${new_file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT --acl public-read
+                aws s3 cp "$new_file" "s3://$R2_BUCKET/${new_file#${SYNC_DIR}/}" \
+                  --endpoint-url $R2_ENDPOINT \
+                  --acl public-read \
+                  --cache-control "public, max-age=31536000, immutable"
                 ;;
             esac
           done < changes.txt
 
-      - name: Upload ls.json files
+      - name: Generate ls.json for each folder in SYNC_DIR & upload to R2
         run: |
+          if [ -d "${SYNC_DIR}" ]; then
+            exit 0
+          fi
+          # generate files
+          find "${SYNC_DIR}" -type d | while read dir; do
+            files=$(find "$dir" -maxdepth 1 -type f -not -name "ls.json" -printf '"%f", ' | sed 's/, $//')
+            [ -z "$files" ] && continue
+            json="{\"path\": \"${dir#$SYNC_DIR/}/\", \"files\": [${files}]}"
+            echo "$json" | jq . > "$dir/ls.json"
+            echo "Generated $dir/ls.json"
+          done
+          # upload files
           find "${SYNC_DIR}" -name "ls.json" -type f | while read file; do
             echo "📂 Uploading $file"
-            aws s3 cp "$file" "s3://${R2_BUCKET}/${file#${SYNC_DIR}/}" --endpoint-url $R2_ENDPOINT --acl public-read
+            aws s3 cp "$file" "s3://${R2_BUCKET}/${file#${SYNC_DIR}/}" \
+              --endpoint-url $R2_ENDPOINT \
+              --acl public-read \
+              --cache-control "public, max-age=60"
           done
